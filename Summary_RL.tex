@@ -1,0 +1,154 @@
+\documentclass[a4paper, fontsize=8pt, landscape, DIV=1]{scrartcl}
+\usepackage{lastpage}
+% Include general settings and customized commands
+\input{settings/general}
+\input{settings/commands}
+%change page style for header
+\pagestyle{fancy}
+\footskip 6.7pt
+\rhead{Felix Crazzolara}
+\lhead{Reinforcement learning}
+\chead{\thepage}
+
+\title{Reinforcement learning}
+\author{Felix Crazzolara}
+
+\date{\today}
+\begin{document}
+
+\setcounter{secnumdepth}{2} %no enumeration of sections
+
+\begin{multicols*}{3}
+
+\maketitle 
+
+\section{Stochastic processes\cite{Papoulis1965ProbabilityRV}}
+$x[n]$ is called a \textit{discrete-state} process if its values are countable. Otherwise, it is a \textit{continuous-state} process.
+
+\section{Dymamic programming}
+Dynamic programming (DP) is an algorithmic technique for solving an optimization problem by breaking it down into simpler subproblems and utilizing the fact that the optimal solution to the overall problem depends upon the optimal solution to its subproblems.
+
+\section{Policy gradient methods}
+\subsection{Basics}
+\textbf{The goal of reinforcement learning}\\[3pt]
+\begin{align*}
+\text{Infinite horizon:}&\quad\theta^*\triangleq\arg\max_{\theta}\mathbb{E}_{(s,a)\sim p_{\theta}(s,a)}[r(s,a)] \\[3pt]
+\text{Finite horizon:}&\quad\theta^*\triangleq\arg\max_{\theta}\sum\limits_{t=1}^{T}\mathbb{E}_{(s_t,a_t)\sim p_{\theta}(s_t,a_t)}[r(s_t,a_t)]
+\end{align*}
+
+\textbf{The policy gradient (Finite horizon)}\\[3pt]
+\begin{align*}
+\nabla_{\theta}J(\theta)&=\nabla_{\theta}\mathbb{E}_{\tau\sim p_{\theta}(\tau)}[\sum\limits_{t=1}^{T}r(s_t,a_t)]=\int\nabla_{\theta}p_{\theta}(\tau)r(\tau)\dif\tau\\
+&=\mathbb{E}_{\tau\sim p_{\theta}(\tau)}[\nabla_{\theta}\log p_{\theta}(\tau)r(\tau)] \\
+&=\mathbb{E}_{\tau\sim p_{\theta}(\tau)}[\left(\sum\limits_{t=1}^{T}\nabla_{\theta}\log\pi_{\theta}(a_t|s_t)\right)\left(\sum\limits_{t=1}^{T}r(s_t,a_t)\right)]
+\end{align*}
+Note that the Markov property is not used here!
+
+\textbf{The policy gradient (Finite horizon with discount)}
+\begin{align*}
+\nabla_{\theta}J(\theta)&=\nabla_{\theta}\mathbb{E}_{\tau\sim p_{\theta}(\tau)}[\sum\limits_{t=1}^{T}\gamma^{t-1}r(s_t,a_t)] \\
+&=\mathbb{E}_{\tau\sim p_{\theta}(\tau)}[\left(\sum\limits_{t=1}^{T}\nabla_{\theta}\log\pi_{\theta}(a_t|s_t)\right)\left(\sum\limits_{t=1}^{T}\gamma^{t-1}r(s_t,a_t)\right)]
+\end{align*}
+
+\textbf{Causality (Finite horizon)}\\[3pt]
+\begin{align*}
+\nabla_{\theta}J(\theta)&=\sum\limits_{t=1}^{T}\mathbb{E}_{\substack{s_{1:t}\\a_{1:t}}}\left[\nabla_{\theta}\log\pi_{\theta}(a_t|s_t)\mathbb{E}_{\substack{s_{t+1:\infty}\\a_{t+1:\infty}}}\left[\sum\limits_{t'=1}^{T}r(s_{t'},a_{t'})\bigg\rvert s_{1:t},a_{1:t}\right]\right] \\
+&=(*)
+\end{align*}
+With
+\begin{equation*}
+\mathbb{E}_{a_t|s_t}[\nabla_{\theta}\log\pi_{\theta}(a_t|s_t)]=\int\pi_\theta(a_t|s_t)\nabla_{\theta}\log\pi_{\theta}(a_t|s_t)\dif a_t=0,
+\end{equation*}
+it follows that
+\begin{align*}
+(*)&=\sum\limits_{t=1}^{T}\mathbb{E}_{\substack{s_{1:t}\\a_{1:t}}}\left[\nabla_{\theta}\log\pi_{\theta}(a_t|s_t)\mathbb{E}_{\substack{s_{t+1:\infty}\\a_{t+1:\infty}}}\left[\sum\limits_{t'=t}^{T}r(s_{t'},a_{t'})\bigg\rvert s_{1:t},a_{1:t}\right]\right] \\
+&=\mathbb{E}_{\substack{s_{1:\infty}\\a_{1:\infty}}}\left[\sum\limits_{t=1}^{T}\nabla_{\theta}\log\pi_{\theta}(a_t|s_t)\left(\sum\limits_{t'=t}^{T}r(s_{t'},a_{t'})\right)\right]
+\end{align*}
+
+\textbf{Causality (Finite horizon with discount)}\\[3pt]
+Similarly as before it holds that:
+\begin{align*}
+\nabla_{\theta}J(\theta)=\mathbb{E}_{\substack{s_{1:\infty}\\a_{1:\infty}}}\left[\sum\limits_{t=1}^{T}\nabla_{\theta}\log\pi_{\theta}(a_t|s_t)\left(\sum\limits_{t'=t}^{T}\gamma^{t'-1}r(s_{t'},a_{t'})\right)\right]
+\end{align*}
+
+\textbf{The off-policy policy gradient}\\[3pt]
+\begin{align*}
+\nabla_{\theta'}J(\theta')=\mathbb{E}_{\tau\sim p_{\theta}(\tau)}\Bigg[\sum\limits_{t=1}^{T}\nabla_{\theta'}\log\pi_{\theta'}(a_t|s_t)\left(\prod\limits_{t'=1}^{t}\frac{\pi_{\theta'}(a_{t'}|s_{t'})}{\pi_{\theta}(a_{t'}|s_{t'}}\right) \\
+\left(\sum\limits_{t'=t}^{T}r(s_{t'},a_{t'})\left(\prod\limits_{t''=t}^{t'}\frac{\pi_{\theta'}(a_{t''}|s_{t''})}{\pi_{\theta}(a_{t''}|s_{t''}}\right)\right)\Bigg]
+\end{align*}
+
+\section{Papers}
+\subsection{Introduction to Stochastic Dynamic Programming (1983)}
+Consider a countable state set $\mathcal{S}$ and a finite action set $\mathcal{A}$. The states are are labelled by nonnegative integers and the transition probabilities are given by $P_{ij}(a)$ for $a\in\mathcal{A}$. Furthermore, upon choosing an action, a reward $|R(i,a)|<B$ is credited to the agent. The value function is defined as
+\begin{equation*}
+V_{\pi}(i)=\mathbb{E}_{\pi}\left[\sum\limits_{n=0}^{\infty}R(X_n,a_n)\alpha^n|X_0=i\right].
+\end{equation*}
+Let $V(i)=\sup_{\pi}V_{\pi}(i)$. A policy $\pi^*$ is said to be $\alpha$-optimal if $V_{\pi^*}(i)=V(i)$ for all $i\ge 0$. the optimal value function is satisfies an optimality equation:\\[3pt]
+\textit{Theorem 2.1 (The Optimality Equation):} 
+\begin{equation*}
+V(i)=\max_a[R(i,a)+\alpha\sum_jP_{ij}(a)V(j)],\quad i\ge 0.
+\end{equation*}
+Finally, the next theorem establishes the existance of an optimal policy:\\[3pt]
+\textit{Theorem 2.2:} Let $f$ be a mapping $f:\mathcal{S}\rightarrow\mathcal{A}$ which satisfies
+\begin{small}
+\begin{equation*}
+R(i,f(i))+\alpha\sum_jP_{ij}(f(i))V(j)=\max_a[R(i,a)+\alpha\sum_jP_{ij}(a)V(j)],\quad i\ge 0.
+\end{equation*}
+\end{small}
+Then $V_f(i)=V(i)$ for all $i\ge 0$, and hence $f$ is $\alpha$-optimal.
+
+\subsection{Learning Without State-Estimation in Partially Observable Markovian Decision Processes}
+\textit{Points out a few very interesting issues that can arise when applying RL methods to POMDPs.}
+\begin{minipage}{0.6\columnwidth}
+Hello \ref{fig:POMPD}
+\end{minipage}
+\begin{minipage}{0.4\columnwidth}
+\includegraphics[width=\textwidth]{img/POMDP.jpg}
+\label{fig:POMDP}
+\captionof{figure}{POMDP with two states (1a\&1b), two actions (A\&B), but only one possible observation.}
+\end{minipage}
+\textit{Issue 1:} Any policy will incur a cost of $R$ per step, whereas the optimal behavior results in a reward of $R$ per step.
+\textit{Issue 2:} The optimal policy for the POMDP is non-stationary.
+
+\subsection{An Analysis of Temporal-Difference Learning with Function Approximation}
+\textit{Assumption 1:} 1) The Markov chain $i_t$ is irreducible and aperiodic. Furthermore, there is a unique distribution $\pi$ that satisfies $\pi'P=\pi'$ with $\pi(i)>0$ for all $i$; here, $\pi$ is a finite of infinite vector, depending on the cardinality of $S$. Let $E_0[\cdot]$ stand for expectation with respect to this distribution.\\
+2) Transition costs $g(i_t,i_{t+1})$ satisfy $E_0[g^2(i_t,i_{t+1})]<\infty$
+\textit{Assumption 2:} 1) the matrix $\Phi$ has full column rank; that is, the basis functions $\{\phi_k|k=1,\ldots,K\}$ are linearly independent.\\
+2) For every $k$, the basis function $\phi_k$ satisfies $E_0[\phi_k^2(i_t)]<\infty$.
+\textit{Assumption 3:} There exists a function $f:S\rightarrow\mathbb{R}_+$ satisfying the following requirements:\\
+1) For all $i_0$ and $m\ge0$
+\begin{equation*}
+\sum\limits_{\tau=0}^{\infty}||E[\phi(i_{\tau})\phi'(i_{\tau+m})|i_0]-E_0[\phi(i_t)\phi'(i_{t+m})]||\le f(i_0)
+\end{equation*}
+and
+\begin{equation*}
+\sum\limits_{\tau=0}^{\infty}||E[\phi(i_{\tau})g(i_{\tau+m},i_{\tau+m+1})|i_0]-E_0[\phi(i_t)g(i_{t+m},i_{t+m+1})]||\le f(i_0).
+\end{equation*}
+2) For any $q>1$, there exists a constant $\mu_q$ such that for all $i_0,t$ $E[f^q(i_t)|i_0]\le\mu_q f^q(i_0)$.
+\textit{Assumption 4:}
+The step sizes $\gamma_t$ are positive, nonincreasing, and predetermined. Furthermore, they satisfy $\sum\limits_{t=0}^{\infty}\gamma_t=\infty$ and $\sum\limits_{t=0}^{\infty}\gamma_t^2<\infty$.\\[5pt]
+\textit{Theorem 1:} Under assumption 1-4, the following hold:\\
+1) The cost-to-go function $J^*$ is in $L_2(S,D)$.\\
+2) For any $\lambda\in[0,1]$, the TD($\lambda$) algorithm with linear function approximators converges with probability one.\\
+3) The limit of convergence $r^*$ is the unique solution of the equation $\Pi T^{(\lambda)}(\Phi r^*)=\Phi r^*$.\\
+4) Furthermore, $r^*$ satisfies
+\begin{equation*}
+||\Phi r^*-J^*||_D\le\frac{1-\lambda\alpha}{1-\alpha}|\Pi J^*-J^*|_D.
+\end{equation*}
+
+\subsection{Policy Gradient Methods for Reinforcement Learning with Function Approximation}
+\textit{Establishes the policy gradient theorem and shows convergence of policy gradient algorithm for arbitrary policy classes.}\\[5pt]
+
+\section{Tipps and tricks}
+\subsection{Value function normalization}
+Consider a reward function $R:\mathcal{S}\times\mathcal{A}\rightarrow[-R,R]$. If we define the normalized value function as $V_{\pi}^n(s)\triangleq(1-\gamma)V_{\pi}(s)$, where $V_{\pi}(s)\triangleq\mathbb{E}_{\substack{s_{0:\infty}\\a_{0:\infty}}}[\sum\limits_{t=0}^{\infty}\gamma^t\mathcal{R}(s_t,a_t)]$ is the usual value function and $\gamma\in(0,1)$ is the discount factor, then we are guarantueed that $V_{\pi}^n(s)\in[-R,R]$.
+
+\bibliographystyle{plain}
+\bibliography{references.bib}
+
+
+\end{multicols*}
+
+
+\setcounter{secnumdepth}{2}
+\end{document}
